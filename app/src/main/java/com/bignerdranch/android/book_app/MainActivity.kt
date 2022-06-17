@@ -41,23 +41,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-            trueButton = findViewById(R.id.true_button)
-            falseButton = findViewById(R.id.button_false)
-            nextButton = findViewById(R.id.next_button)
-            questionTextView = findViewById(R.id.question_text_view)
+        trueButton = findViewById(R.id.true_button)
+        falseButton = findViewById(R.id.button_false)
+        nextButton = findViewById(R.id.next_button)
+        questionTextView = findViewById(R.id.question_text_view)
 
-            trueButton.setOnClickListener {
-                checkAnswer(true)
-                Log.d("try", "true")
-            }
-            falseButton.setOnClickListener {
-                checkAnswer(false)
-                Log.d("try", "false")
-            }
-            nextButton.setOnClickListener {
-                currentIndex = (currentIndex+1)%questionBank.size
-                updateQuestion()
-            }
+        questionTextView.setOnClickListener {
+            currentIndex = (currentIndex+1)%questionBank.size
             updateQuestion()
+        }
+        trueButton.setOnClickListener {
+            checkAnswer(true)
+            Log.d("try", "true")
+        }
+        falseButton.setOnClickListener {
+            checkAnswer(false)
+            Log.d("try", "false")
+        }
+        nextButton.setOnClickListener {
+            currentIndex = (currentIndex+1)%questionBank.size
+            updateQuestion()
+        }
+        updateQuestion()
         }
 }
