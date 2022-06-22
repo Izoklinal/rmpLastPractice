@@ -1,3 +1,5 @@
+@file:Suppress("SpellCheckingInspection")
+
 package com.bignerdranch.android.book_app
 
 import androidx.test.platform.app.InstrumentationRegistry
