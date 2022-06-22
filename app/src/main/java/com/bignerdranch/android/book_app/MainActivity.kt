@@ -3,6 +3,7 @@ package com.bignerdranch.android.book_app
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -11,7 +12,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var trueButton: Button
     private lateinit var falseButton: Button
-    private lateinit var nextButton: Button
+    private lateinit var nextButton: ImageButton
+    private lateinit var prevButton: ImageButton
     private lateinit var questionTextView: TextView
 
     private val questionBank = listOf(
@@ -44,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.button_false)
         nextButton = findViewById(R.id.next_button)
+        prevButton = findViewById(R.id.prev_button)
         questionTextView = findViewById(R.id.question_text_view)
 
         questionTextView.setOnClickListener {
@@ -60,6 +63,14 @@ class MainActivity : AppCompatActivity() {
         }
         nextButton.setOnClickListener {
             currentIndex = (currentIndex+1)%questionBank.size
+            updateQuestion()
+        }
+        prevButton.setOnClickListener {
+            currentIndex = if (currentIndex>0) {
+                (currentIndex-1)
+            } else {
+                questionBank.size-1
+            }
             updateQuestion()
         }
         updateQuestion()
