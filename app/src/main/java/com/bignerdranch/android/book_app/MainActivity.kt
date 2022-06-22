@@ -7,8 +7,10 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 
 private const val TAG = "MainActivity"
+private const val KEY_INDEX = "index"
 
 class MainActivity : AppCompatActivity() {
 
@@ -18,20 +20,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prevButton: ImageButton
     private lateinit var questionTextView: TextView
 
-    private val questionBank = listOf(
-        Question(R.string.question_australia, true),
-        Question(R.string.question_oceans, true),
-        Question(R.string.question_mideast,false),
-        Question(R.string.question_africa, false),
-        Question(R.string.question_americas, true),
-        Question(R.string.question_asia,true)
-    )
-    private var blockButton: Array<Boolean> = arrayOf(true, true, true, true, true, true)
-    private var currentIndex = 0
-    private var rightAnswers = 0
-    private var answeredQuestions = 0
+    private val quizViewModel: QuizViewModel by lazy {
+        ViewModelProvider(this).get(QuizViewModel::class.java)
+    }
+
     private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
+        val correctAnswer = quizViewModel.currentQuestionAnswer
         val messageResId = if (userAnswer == correctAnswer) {
             R.string.correct_toast
         } else {
@@ -39,21 +33,25 @@ class MainActivity : AppCompatActivity() {
         }
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
         if (userAnswer==correctAnswer){
-            rightAnswers++
+            quizViewModel.rightAnswer++
         }
-        if (answeredQuestions==questionBank.size-1) {
-            val percent = (100/(questionBank.size.toDouble()))*rightAnswers
-            Toast.makeText(this, "$rightAnswers/${questionBank.size} ($percent%)", Toast.LENGTH_LONG).show()
+        val qSize = quizViewModel.qSize
+        if (quizViewModel.answeredQuestions==qSize-1) {
+            val percent = (100/(qSize.toDouble()))*quizViewModel.rightAnswer
+            Toast.makeText(this, "$percent%", Toast.LENGTH_LONG).show()
         }
     }
     private fun updateQuestion() {
-        val questionTextResId = questionBank[currentIndex].textResId
+        val questionTextResId = quizViewModel.currentQuestionText
         questionTextView.setText(questionTextResId)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate(Bundle?) called")
         setContentView(R.layout.activity_main)
+
+        val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
+        quizViewModel.currentIndex = currentIndex
 
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.button_false)
@@ -62,29 +60,29 @@ class MainActivity : AppCompatActivity() {
         questionTextView = findViewById(R.id.question_text_view)
 
         questionTextView.setOnClickListener {
-            currentIndex = (currentIndex+1)%questionBank.size
+            quizViewModel.moveToNext()
             updateQuestion()
         }
         trueButton.setOnClickListener {
             checkAnswer(true)
-            blockButton[currentIndex] = false
+            quizViewModel.blockButton()
             trueButton.isEnabled = false
             falseButton.isEnabled = false
-            answeredQuestions++
-            Log.d("count", "true $answeredQuestions")
+            quizViewModel.answeredQuestions++
+            Log.d("count", "true $quizViewModel.answeredQuestions")
         }
         falseButton.setOnClickListener {
             checkAnswer(false)
-            blockButton[currentIndex]=false
+            quizViewModel.blockButton()
             trueButton.isEnabled = false
             falseButton.isEnabled = false
-            answeredQuestions++
-            Log.d("count", "false $answeredQuestions")
+            quizViewModel.answeredQuestions++
+            Log.d("count", "false $quizViewModel.answeredQuestions")
         }
         nextButton.setOnClickListener {
-            currentIndex = (currentIndex+1)%questionBank.size
+            quizViewModel.moveToNext()
             updateQuestion()
-            if (blockButton[currentIndex]){
+            if (quizViewModel.buttonsAreBlocked[quizViewModel.currentIndex]){
                 trueButton.isEnabled = true
                 falseButton.isEnabled = true
             } else {
@@ -93,13 +91,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         prevButton.setOnClickListener {
-            currentIndex = if (currentIndex>0) {
-                (currentIndex-1)
-            } else {
-                questionBank.size-1
-            }
+            quizViewModel.moveToBack()
             updateQuestion()
-            if (blockButton[currentIndex]){
+            if (quizViewModel.buttonsAreBlocked[quizViewModel.currentIndex]){
                 trueButton.isEnabled = true
                 falseButton.isEnabled = true
             } else {
@@ -123,6 +117,12 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         Log.d(TAG, "onPause() called")
+    }
+
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        Log.i(TAG, "onSaveInstanceState")
+        savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)
     }
 
     override fun onStop() {
