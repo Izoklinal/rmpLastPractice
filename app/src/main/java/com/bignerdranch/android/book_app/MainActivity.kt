@@ -8,6 +8,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
+private const val TAG = "MainActivity"
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var trueButton: Button
@@ -24,7 +26,10 @@ class MainActivity : AppCompatActivity() {
         Question(R.string.question_americas, true),
         Question(R.string.question_asia,true)
     )
+    private var blockButton: Array<Boolean> = arrayOf(true, true, true, true, true, true)
     private var currentIndex = 0
+    private var rightAnswers = 0
+    private var answeredQuestions = 0
     private fun checkAnswer(userAnswer: Boolean) {
         val correctAnswer = questionBank[currentIndex].answer
         val messageResId = if (userAnswer == correctAnswer) {
@@ -33,14 +38,21 @@ class MainActivity : AppCompatActivity() {
             R.string.incorrect_toast
         }
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
+        if (userAnswer==correctAnswer){
+            rightAnswers++
+        }
+        if (answeredQuestions==questionBank.size-1) {
+            val percent = (100/(questionBank.size.toDouble()))*rightAnswers
+            Toast.makeText(this, "$rightAnswers/${questionBank.size} ($percent%)", Toast.LENGTH_LONG).show()
+        }
     }
     private fun updateQuestion() {
         val questionTextResId = questionBank[currentIndex].textResId
         questionTextView.setText(questionTextResId)
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate(Bundle?) called")
         setContentView(R.layout.activity_main)
 
         trueButton = findViewById(R.id.true_button)
@@ -55,15 +67,30 @@ class MainActivity : AppCompatActivity() {
         }
         trueButton.setOnClickListener {
             checkAnswer(true)
-            Log.d("try", "true")
+            blockButton[currentIndex] = false
+            trueButton.isEnabled = false
+            falseButton.isEnabled = false
+            answeredQuestions++
+            Log.d("count", "true $answeredQuestions")
         }
         falseButton.setOnClickListener {
             checkAnswer(false)
-            Log.d("try", "false")
+            blockButton[currentIndex]=false
+            trueButton.isEnabled = false
+            falseButton.isEnabled = false
+            answeredQuestions++
+            Log.d("count", "false $answeredQuestions")
         }
         nextButton.setOnClickListener {
             currentIndex = (currentIndex+1)%questionBank.size
             updateQuestion()
+            if (blockButton[currentIndex]){
+                trueButton.isEnabled = true
+                falseButton.isEnabled = true
+            } else {
+                trueButton.isEnabled = false
+                falseButton.isEnabled = false
+            }
         }
         prevButton.setOnClickListener {
             currentIndex = if (currentIndex>0) {
@@ -72,7 +99,39 @@ class MainActivity : AppCompatActivity() {
                 questionBank.size-1
             }
             updateQuestion()
+            if (blockButton[currentIndex]){
+                trueButton.isEnabled = true
+                falseButton.isEnabled = true
+            } else {
+                trueButton.isEnabled = false
+                falseButton.isEnabled = false
+            }
         }
         updateQuestion()
         }
+
+    override fun onStart() {
+        super.onStart()
+        Log.d(TAG, "onStart() called")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "onResume() called")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "onPause() called")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(TAG, "onStop() called")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy() called")
+    }
 }
